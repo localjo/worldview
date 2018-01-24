@@ -5,6 +5,14 @@ import OlSourceTileWMS from 'ol/source/tilewms';
 import OlLayerGroup from 'ol/layer/group';
 import OlLayerTile from 'ol/layer/tile';
 import OlTileGridTileGrid from 'ol/tilegrid/tilegrid';
+import Style from 'ol/style/style';
+import Circle from 'ol/style/circle';
+import Fill from 'ol/style/fill';
+import MVT from 'ol/format/mvt';
+import Icon from 'ol/style/icon';
+// import XYZ from 'ol/source/xyz';
+import LayerVectorTile from 'ol/layer/vectortile';
+import SourceVectorTile from 'ol/source/vectortile';
 import lodashCloneDeep from 'lodash/cloneDeep';
 import lodashMerge from 'lodash/merge';
 import lodashEach from 'lodash/each';
@@ -68,13 +76,13 @@ export function mapLayerBuilder(models, config, cache, Parent) {
         if(models.palettes.active[def.id]) {
           var palette = models.palettes.active[def.id].maps;
           var hexColor = models.palettes.getCustom(palette[0].custom).colors[0];
-          var color = wv.util.hexToRGBA(hexColor);
+          var color = util.hexToRGBA(hexColor);
         }
         // TODO: add build step to add the default color to the layer config and pull in here
         // If you use a rendered layer's default color, set the default color.
         else if(config.palettes.rendered[def.id]) {
           var hexColor = config.palettes.rendered[def.id].maps[0].legend.colors[0];
-          var color = wv.util.hexToRGBA(hexColor);
+          var color = util.hexToRGBA(hexColor);
         } else {
           // Set default color when layer is initially loaded. This should go away.
           var color = 'rgba(0,0,0,1)';
@@ -88,7 +96,7 @@ export function mapLayerBuilder(models, config, cache, Parent) {
           layerPrior.wv = attributes;
           layerNext.wv = attributes;
 
-          layer = new ol.layer.Group({
+          layer = new OlLayerGroup({
             layers: [layer, layerNext, layerPrior]
           });
         }
@@ -242,7 +250,7 @@ export function mapLayerBuilder(models, config, cache, Parent) {
    * @returns {object} OpenLayers Vector layer
    */
   var createLayerVector = function(def, options, day, color) {
-    var proj, extent, source, matrixSet, matrixIds;
+    var proj, start, extent, source, matrixSet, matrixIds;
     proj = models.proj.selected;
     source = config.sources[def.source];
     extent = proj.maxExtent;
@@ -256,7 +264,7 @@ export function mapLayerBuilder(models, config, cache, Parent) {
     }
     if ('undefined' === typeof def.matrixIds) {
       matrixIds = [];
-      _.each(matrixSet.resolutions, function(resolution, index) {
+      lodashEach(matrixSet.resolutions, function(resolution, index) {
         matrixIds.push(index);
       });
     } else {
@@ -273,49 +281,49 @@ export function mapLayerBuilder(models, config, cache, Parent) {
       }
     }
 
-    var vectorLayerDefaultStyle = new ol.style.Style({
-      image: new ol.style.Circle({
+    var vectorLayerDefaultStyle = new Style({
+      image: new Circle({
         radius: 5,
-        fill: new ol.style.Fill({color: color}),
+        fill: new Fill({color: color}),
       })
     });
     var layerName = def.layer || def.id;
     var tms = def.matrixSet;
     var sourceOptions = {
-      format: new ol.format.MVT(),
-      tileGrid: ol.tilegrid.createXYZ({
-        maxZoom: parseInt(tms.match(/^GoogleMapsCompatible_Level(\d)/)[1]) - 1
-      }),
+      format: new MVT(),
+      // tileGrid: XYZ({
+      //   maxZoom: parseInt(tms.match(/^GoogleMapsCompatible_Level(\d)/)[1]) - 1
+      // }),
       tilePixelRatio: 16,
       url: source.url + '?layer=' + layerName + '&tilematrixset=' + tms + '&Service=WMTS&Request=GetTile&Version=1.0.0&Format=application%2Fx-protobuf&TileMatrix={z}&TileCol={x}&TileRow={y}',
     };
-    var layer = new ol.layer.VectorTile({
+    var layer = new LayerVectorTile({
       extent: extent,
-      source: new ol.source.VectorTile(sourceOptions),
+      source: new SourceVectorTile(sourceOptions),
       style: vectorLayerDefaultStyle
     });
 
     var setColorFromAttribute = true;
     if (setColorFromAttribute) {
-      var newColor = wv.util.rgbaToShortHex(color);
+      var newColor = util.rgbaToShortHex(color);
       layer.setStyle(function(feature, resolution) {
         var confidence = feature.get('CONFIDENCE');
         var dir = feature.get('dir');
         if(confidence) {
-          var renderColor = wv.util.changeHue(newColor, confidence);
+          var renderColor = util.changeHue(newColor, confidence);
           return [
-            new ol.style.Style({
-              image: new ol.style.Circle({
+            new Style({
+              image: new Circle({
                 radius: 5,
-                fill: new ol.style.Fill({color: renderColor}),
+                fill: new Fill({color: renderColor}),
               }),
             })
           ];
         } else if(dir) {
           var radian = dir * Math.PI / 180;
           return [
-            new ol.style.Style({
-              image: new ol.style.Icon({
+            new Style({
+              image: new Icon({
                 src: 'images/up_arrow12white.png',
                 imgSize: [12,12],
                 rotation: radian,
@@ -325,10 +333,10 @@ export function mapLayerBuilder(models, config, cache, Parent) {
         } else {
           var renderColor = color;
           return [
-            new ol.style.Style({
-              image: new ol.style.Circle({
+            new Style({
+              image: new Circle({
                 radius: 5,
-                fill: new ol.style.Fill({color: renderColor}),
+                fill: new Fill({color: renderColor}),
               }),
             })
           ];
