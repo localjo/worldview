@@ -250,11 +250,18 @@ export function mapLayerBuilder(models, config, cache, Parent) {
    * @returns {object} OpenLayers Vector layer
    */
   var createLayerVector = function(def, options, day, color) {
-    var proj, start, extent, source, matrixSet, matrixIds;
+    var proj, start, extent, source, matrixSet, matrixIds, res;
     proj = models.proj.selected;
     source = config.sources[def.source];
     extent = proj.maxExtent;
     start = [proj.maxExtent[0], proj.maxExtent[3]];
+    res = proj.resolutions;
+    if (!source) { throw new Error(def.id + ': Invalid source: ' + def.source); }
+
+    if (proj.id === 'geographic') {
+      res = [0.28125, 0.140625, 0.0703125, 0.03515625, 0.017578125, 0.0087890625, 0.00439453125,
+        0.002197265625, 0.0010986328125, 0.00054931640625, 0.00027465820313];
+    }
     if (!source) {
       throw new Error(def.id + ': Invalid source: ' + def.source);
     }
@@ -289,13 +296,21 @@ export function mapLayerBuilder(models, config, cache, Parent) {
     });
     var layerName = def.layer || def.id;
     var tms = def.matrixSet;
+    console.log(tms);
     var sourceOptions = {
       format: new MVT(),
-      // tileGrid: XYZ({
-      //   maxZoom: parseInt(tms.match(/^GoogleMapsCompatible_Level(\d)/)[1]) - 1
-      // }),
+      wrapX: true,
+      style: 'default',
+      crossOrigin: 'anonymous',
+      transition: 0,
+      tileGrid: new OlTileGridTileGrid({
+        origin: start,
+        resolutions: res
+      }),
       tilePixelRatio: 16,
-      url: source.url + '?layer=' + layerName + '&tilematrixset=' + tms + '&Service=WMTS&Request=GetTile&Version=1.0.0&Format=application%2Fx-protobuf&TileMatrix={z}&TileCol={x}&TileRow={y}',
+      // http://cache2-sit.gibs.earthdata.nasa.gov/wmts/epsg4326/std/wmts.cgi?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER=FIRMS_MODIS_v6&STYLE=&TILEMATRIXSET=16km&TILEMATRIX=0&TILEROW=0&TILECOL=0&TIME=2018-01-01&FORMAT=application%2Fvnd.mapbox-vector-tile
+      // '&tilematrixset=' + tms
+      url: source.url + '?layer=' + layerName + '&Service=WMTS&Request=GetTile&Version=1.0.0&FORMAT=application%2Fvnd.mapbox-vector-tile&TILEMATRIXSET=16km&TileMatrix={z}&TileCol={x}&TileRow={y}&TIME=2018-01-01',
     };
     var layer = new LayerVectorTile({
       extent: extent,
