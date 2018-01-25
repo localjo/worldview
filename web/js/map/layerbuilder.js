@@ -85,7 +85,7 @@ export function mapLayerBuilder(models, config, cache, Parent) {
           var color = util.hexToRGBA(hexColor);
         } else {
           // Set default color when layer is initially loaded. This should go away.
-          var color = 'rgba(0,0,0,1)';
+          var color = 'rgba(255,0,0,1)';
         }
         layer = createLayerVector(def, options, null, color);
         if (proj.id === 'geographic' && def.wrapadjacentdays === true) {
@@ -291,27 +291,26 @@ export function mapLayerBuilder(models, config, cache, Parent) {
     var vectorLayerDefaultStyle = new Style({
       image: new Circle({
         radius: 5,
-        fill: new Fill({color: color}),
+        fill: new Fill({color: 'rgba(255,0,0,1)'}),
       })
     });
     var layerName = def.layer || def.id;
     var tms = def.matrixSet;
-    console.log(tms);
     var sourceOptions = {
       format: new MVT(),
-      wrapX: true,
-      style: 'default',
-      crossOrigin: 'anonymous',
-      transition: 0,
-      tileGrid: new OlTileGridTileGrid({
+      matrixSet: matrixSet.id,
+      tileGrid: new OlTileGridWMTS({
         origin: start,
-        resolutions: res
+        resolutions: matrixSet.resolutions,
+        matrixIds: matrixIds,
+        tileSize: matrixSet.tileSize[0]
       }),
       tilePixelRatio: 16,
       // http://cache2-sit.gibs.earthdata.nasa.gov/wmts/epsg4326/std/wmts.cgi?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER=FIRMS_MODIS_v6&STYLE=&TILEMATRIXSET=16km&TILEMATRIX=0&TILEROW=0&TILECOL=0&TIME=2018-01-01&FORMAT=application%2Fvnd.mapbox-vector-tile
       // '&tilematrixset=' + tms
-      url: source.url + '?layer=' + layerName + '&Service=WMTS&Request=GetTile&Version=1.0.0&FORMAT=application%2Fvnd.mapbox-vector-tile&TILEMATRIXSET=16km&TileMatrix={z}&TileCol={x}&TileRow={y}&TIME=2018-01-01',
+      url: source.url + '?layer=' + layerName + '&tilematrixset=' + tms +'&Service=WMTS&Request=GetTile&Version=1.0.0&FORMAT=application%2Fvnd.mapbox-vector-tile&TileMatrix={z}&TileCol={x}&TileRow={y}&TIME=2018-01-01',
     };
+    console.log(sourceOptions);
     var layer = new LayerVectorTile({
       extent: extent,
       source: new SourceVectorTile(sourceOptions),
