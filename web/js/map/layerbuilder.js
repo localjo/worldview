@@ -39,7 +39,7 @@ export function mapLayerBuilder(models, config, cache, Parent) {
    * @returns {object} OpenLayers layer
    */
   self.createLayer = function (def, options) {
-    var date, key, proj, layer, layerNext, layerPrior, attributes;
+    var color, hexColor, date, key, proj, layer, layerNext, layerPrior, attributes;
 
     options = options || {};
     key = self.layerKey(def, options);
@@ -70,22 +70,20 @@ export function mapLayerBuilder(models, config, cache, Parent) {
             layers: [layer, layerNext, layerPrior]
           });
         }
-
       } else if (def.type === 'vector') {
         // If a custom palette is chosen, then set color.
-        if(models.palettes.active[def.id]) {
+        if (models.palettes.active[def.id]) {
           var palette = models.palettes.active[def.id].maps;
-          var hexColor = models.palettes.getCustom(palette[0].custom).colors[0];
-          var color = util.hexToRGBA(hexColor);
-        }
+          hexColor = models.palettes.getCustom(palette[0].custom).colors[0];
+          color = util.hexToRGBA(hexColor);
         // TODO: add build step to add the default color to the layer config and pull in here
         // If you use a rendered layer's default color, set the default color.
-        else if(config.palettes.rendered[def.id]) {
-          var hexColor = config.palettes.rendered[def.id].maps[0].legend.colors[0];
-          var color = util.hexToRGBA(hexColor);
+        } else if (config.palettes.rendered[def.id]) {
+          hexColor = config.palettes.rendered[def.id].maps[0].legend.colors[0];
+          color = util.hexToRGBA(hexColor);
         } else {
           // Set default color when layer is initially loaded. This should go away.
-          var color = 'rgba(255,0,0,1)';
+          color = 'rgba(255,0,0,1)';
         }
         layer = createLayerVector(def, options, null, color);
         if (proj.id === 'geographic' && def.wrapadjacentdays === true) {
@@ -100,7 +98,6 @@ export function mapLayerBuilder(models, config, cache, Parent) {
             layers: [layer, layerNext, layerPrior]
           });
         }
-
       } else if (def.type === 'wms') {
         layer = createLayerWMS(def, options);
         if (proj.id === 'geographic' && def.wrapadjacentdays === true) {
@@ -250,12 +247,13 @@ export function mapLayerBuilder(models, config, cache, Parent) {
    * @returns {object} OpenLayers Vector layer
    */
   var createLayerVector = function(def, options, day, color) {
-    var proj, start, extent, source, matrixSet, matrixIds, res;
+    var date, extra, proj, start, extent, source, matrixSet, matrixIds, renderColor;
     proj = models.proj.selected;
     source = config.sources[def.source];
     extent = proj.maxExtent;
     start = [proj.maxExtent[0], proj.maxExtent[3]];
-    res = proj.resolutions;
+    var res = proj.resolutions;
+
     if (!source) { throw new Error(def.id + ': Invalid source: ' + def.source); }
 
     if (proj.id === 'geographic') {
@@ -269,7 +267,7 @@ export function mapLayerBuilder(models, config, cache, Parent) {
     if (!matrixSet) {
       throw new Error(def.id + ': Undefined matrix set: ' + def.matrixSet);
     }
-    if ('undefined' === typeof def.matrixIds) {
+    if (typeof def.matrixIds === 'undefined') {
       matrixIds = [];
       lodashEach(matrixSet.resolutions, function(resolution, index) {
         matrixIds.push(index);
@@ -288,75 +286,87 @@ export function mapLayerBuilder(models, config, cache, Parent) {
       }
     }
 
-    var vectorLayerDefaultStyle = new Style({
-      image: new Circle({
-        radius: 5,
-        fill: new Fill({color: 'rgba(255,0,0,1)'}),
-      })
-    });
+    if (def.period === 'daily') {
+      date = options.date || models.date.selected;
+      if (day) {
+        date = util.dateAdd(date, 'day', day);
+      }
+      extra = '?TIME=' + util.toISOStringDate(date);
+    }
+
     var layerName = def.layer || def.id;
     var tms = def.matrixSet;
-    var sourceOptions = {
-      format: new MVT(),
-      matrixSet: matrixSet.id,
-      tileGrid: new OlTileGridWMTS({
-        origin: start,
-        resolutions: matrixSet.resolutions,
-        matrixIds: matrixIds,
-        tileSize: matrixSet.tileSize[0]
-      }),
-      tilePixelRatio: 16,
-      // http://cache2-sit.gibs.earthdata.nasa.gov/wmts/epsg4326/std/wmts.cgi?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER=FIRMS_MODIS_v6&STYLE=&TILEMATRIXSET=16km&TILEMATRIX=0&TILEROW=0&TILECOL=0&TIME=2018-01-01&FORMAT=application%2Fvnd.mapbox-vector-tile
-      // '&tilematrixset=' + tms
-      url: source.url + '?layer=' + layerName + '&tilematrixset=' + tms +'&Service=WMTS&Request=GetTile&Version=1.0.0&FORMAT=application%2Fvnd.mapbox-vector-tile&TileMatrix={z}&TileCol={x}&TileRow={y}&TIME=2018-01-01',
-    };
-    console.log(sourceOptions);
+
     var layer = new LayerVectorTile({
+      renderMode: 'image',
+      preload: 1,
       extent: extent,
-      source: new SourceVectorTile(sourceOptions),
-      style: vectorLayerDefaultStyle
+      source: new SourceVectorTile({
+        // url: source.url + extra + '&layer=' + layerName + '&tilematrixset=' + tms + '&Service=WMTS&Request=GetTile&Version=1.0.0&FORMAT=application%2Fvnd.mapbox-vector-tile&TileMatrix={z}&TileCol={x}&TileRow={y}',
+        // NOTE: Hard-coded url for testing
+        url: 'http://cache2-sit.gibs.earthdata.nasa.gov/wmts/epsg4326/std/wmts.cgi' + extra + '&layer=' + layerName + '&tilematrixset=' + tms + '&Service=WMTS&Request=GetTile&Version=1.0.0&FORMAT=application%2Fvnd.mapbox-vector-tile&TileMatrix={z}&TileCol={x}&TileRow={y}',
+        format: new MVT(),
+        matrixSet: matrixSet.id,
+        tileGrid: new OlTileGridWMTS({
+          origin: start,
+          resolutions: matrixSet.resolutions,
+          matrixIds: matrixIds,
+          tileSize: matrixSet.tileSize[0]
+        })
+      }),
+      style: new Style({
+        image: new Circle({
+          radius: 5,
+          fill: new Fill({ color: 'rgba(255,0,0,1)' })
+        })
+      })
     });
 
+    /**
+     * Style the vector based on feature tags outline in style json
+     * @type {Boolean}
+     */
     var setColorFromAttribute = true;
     if (setColorFromAttribute) {
       var newColor = util.rgbaToShortHex(color);
       layer.setStyle(function(feature, resolution) {
         var confidence = feature.get('CONFIDENCE');
         var dir = feature.get('dir');
-        if(confidence) {
-          var renderColor = util.changeHue(newColor, confidence);
+        if (confidence) {
+          renderColor = util.changeHue(newColor, confidence);
           return [
             new Style({
               image: new Circle({
                 radius: 5,
-                fill: new Fill({color: renderColor}),
-              }),
+                fill: new Fill({ color: renderColor })
+              })
             })
           ];
-        } else if(dir) {
+        } else if (dir) {
           var radian = dir * Math.PI / 180;
           return [
             new Style({
               image: new Icon({
                 src: 'images/up_arrow12white.png',
-                imgSize: [12,12],
-                rotation: radian,
+                imgSize: [12, 12],
+                rotation: radian
               })
             })
           ];
         } else {
-          var renderColor = color;
+          renderColor = color;
           return [
             new Style({
               image: new Circle({
                 radius: 5,
-                fill: new Fill({color: renderColor}),
-              }),
+                fill: new Fill({ color: renderColor })
+              })
             })
           ];
         }
       });
     }
+
     return layer;
   };
 

@@ -47,21 +47,28 @@ export function dataMap(model, maps, config) {
       image = 'images/data.plus-button.png';
     }
 
-    if (feature !== hovering) {
+    return [new OlStyleStyle({
+      image: new OlStyleIcon({
+        src: image,
+        scale: dim.scale
+      })
+    })];
+  };
+
+  var hoverStyle = function (feature) {
+    var dim = getButtonDimensions();
+    var offset = -(dim.size / 2.0 + 14);
+    if (!model.isSelected(feature.granule)) {
       return [new OlStyleStyle({
-        image: new OlStyleIcon({
-          src: image,
-          scale: dim.scale
-        })
-      })];
-    } else {
-      var offset = -(dim.size / 2.0 + 14);
-      return [new OlStyleStyle({
-        image: new OlStyleIcon({
-          src: image,
-          scale: dim.scale
+        fill: new OlStyleFill({
+          color: 'rgba(181, 158, 50, 0.25)'
+        }),
+        stroke: new OlStyleStroke({
+          color: 'rgb(251, 226, 109)',
+          width: 3
         }),
         text: new OlStyleText({
+          exceedLength: true,
           font: 'bold 14px ‘Lucida Sans’, Arial, Sans-Serif',
           text: feature.granule.label,
           fill: new OlStyleFill({
@@ -74,20 +81,6 @@ export function dataMap(model, maps, config) {
           offsetY: offset
         })
       })];
-    }
-  };
-
-  var hoverStyle = function (feature) {
-    if (!model.isSelected(feature.granule)) {
-      return [new OlStyleStyle({
-        fill: new OlStyleFill({
-          color: 'rgba(181, 158, 50, 0.25)'
-        }),
-        stroke: new OlStyleStroke({
-          color: 'rgb(251, 226, 109)',
-          width: 3
-        })
-      })];
     } else {
       return [new OlStyleStyle({
         fill: new OlStyleFill({
@@ -96,6 +89,19 @@ export function dataMap(model, maps, config) {
         stroke: new OlStyleStroke({
           color: 'rgb(255, 6, 0)',
           width: 3
+        }),
+        text: new OlStyleText({
+          exceedLength: true,
+          font: 'bold 14px ‘Lucida Sans’, Arial, Sans-Serif',
+          text: feature.granule.label,
+          fill: new OlStyleFill({
+            color: '#ffffff'
+          }),
+          stroke: new OlStyleStroke({
+            color: 'rgba(0, 0, 0, .7)',
+            width: 5
+          }),
+          offsetY: offset
         })
       })];
     }
@@ -174,8 +180,8 @@ export function dataMap(model, maps, config) {
     createSelectionLayer();
     createGridLayer();
     createSwathLayer();
-    createHoverLayer();
     createButtonLayer();
+    createHoverLayer();
     $(maps.selected.getViewport())
       .on('mousemove', hoverCheck);
     $(maps.selected.getViewport())
