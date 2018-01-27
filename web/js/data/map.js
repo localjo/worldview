@@ -58,6 +58,19 @@ export function dataMap(model, maps, config) {
   var hoverStyle = function (feature) {
     var dim = getButtonDimensions();
     var offset = -(dim.size / 2.0 + 14);
+    var textStyle = new OlStyleText({
+      exceedLength: true,
+      font: 'bold 14px ‘Lucida Sans’, Arial, Sans-Serif',
+      text: feature.granule.label,
+      fill: new OlStyleFill({
+        color: '#ffffff'
+      }),
+      stroke: new OlStyleStroke({
+        color: 'rgba(0, 0, 0, .7)',
+        width: 5
+      }),
+      offsetY: offset
+    });
     if (!model.isSelected(feature.granule)) {
       return [new OlStyleStyle({
         fill: new OlStyleFill({
@@ -67,19 +80,7 @@ export function dataMap(model, maps, config) {
           color: 'rgb(251, 226, 109)',
           width: 3
         }),
-        text: new OlStyleText({
-          exceedLength: true,
-          font: 'bold 14px ‘Lucida Sans’, Arial, Sans-Serif',
-          text: feature.granule.label,
-          fill: new OlStyleFill({
-            color: '#ffffff'
-          }),
-          stroke: new OlStyleStroke({
-            color: 'rgba(0, 0, 0, .7)',
-            width: 5
-          }),
-          offsetY: offset
-        })
+        text: textStyle
       })];
     } else {
       return [new OlStyleStyle({
@@ -90,19 +91,7 @@ export function dataMap(model, maps, config) {
           color: 'rgb(255, 6, 0)',
           width: 3
         }),
-        text: new OlStyleText({
-          exceedLength: true,
-          font: 'bold 14px ‘Lucida Sans’, Arial, Sans-Serif',
-          text: feature.granule.label,
-          fill: new OlStyleFill({
-            color: '#ffffff'
-          }),
-          stroke: new OlStyleStroke({
-            color: 'rgba(0, 0, 0, .7)',
-            width: 5
-          }),
-          offsetY: offset
-        })
+        text: textStyle
       })];
     }
   };
