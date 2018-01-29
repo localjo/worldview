@@ -296,9 +296,7 @@ export function mapLayerBuilder(models, config, cache, Parent) {
       preload: 1,
       extent: extent,
       source: new SourceVectorTile({
-        // url: source.url + extra + '&layer=' + layerName + '&tilematrixset=' + tms + '&Service=WMTS&Request=GetTile&Version=1.0.0&FORMAT=application%2Fvnd.mapbox-vector-tile&TileMatrix={z}&TileCol={x}&TileRow={y}',
-        // NOTE: Hard-coded url for testing
-        url: 'https://cache2-sit.gibs.earthdata.nasa.gov/wmts/epsg4326/std/wmts.cgi' + extra + '&layer=' + layerName + '&tilematrixset=' + tms + '&Service=WMTS&Request=GetTile&Version=1.0.0&FORMAT=application%2Fvnd.mapbox-vector-tile&TileMatrix={z}&TileCol={x}&TileRow={y}',
+        url: source.url + extra + '&layer=' + layerName + '&tilematrixset=' + tms + '&Service=WMTS&Request=GetTile&Version=1.0.0&FORMAT=application%2Fvnd.mapbox-vector-tile&TileMatrix={z}&TileCol={x}&TileRow={y}',
         format: new MVT(),
         matrixSet: matrixSet.id,
         tileGrid: new OlTileGridWMTS({
