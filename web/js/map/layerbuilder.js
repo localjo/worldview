@@ -252,14 +252,8 @@ export function mapLayerBuilder(models, config, cache, Parent) {
     source = config.sources[def.source];
     extent = proj.maxExtent;
     start = [proj.maxExtent[0], proj.maxExtent[3]];
-    var res = proj.resolutions;
 
     if (!source) { throw new Error(def.id + ': Invalid source: ' + def.source); }
-
-    if (proj.id === 'geographic') {
-      res = [0.28125, 0.140625, 0.0703125, 0.03515625, 0.017578125, 0.0087890625, 0.00439453125,
-        0.002197265625, 0.0010986328125, 0.00054931640625, 0.00027465820313];
-    }
     if (!source) {
       throw new Error(def.id + ': Invalid source: ' + def.source);
     }
@@ -304,7 +298,7 @@ export function mapLayerBuilder(models, config, cache, Parent) {
       source: new SourceVectorTile({
         // url: source.url + extra + '&layer=' + layerName + '&tilematrixset=' + tms + '&Service=WMTS&Request=GetTile&Version=1.0.0&FORMAT=application%2Fvnd.mapbox-vector-tile&TileMatrix={z}&TileCol={x}&TileRow={y}',
         // NOTE: Hard-coded url for testing
-        url: 'http://cache2-sit.gibs.earthdata.nasa.gov/wmts/epsg4326/std/wmts.cgi' + extra + '&layer=' + layerName + '&tilematrixset=' + tms + '&Service=WMTS&Request=GetTile&Version=1.0.0&FORMAT=application%2Fvnd.mapbox-vector-tile&TileMatrix={z}&TileCol={x}&TileRow={y}',
+        url: 'https://cache2-sit.gibs.earthdata.nasa.gov/wmts/epsg4326/std/wmts.cgi' + extra + '&layer=' + layerName + '&tilematrixset=' + tms + '&Service=WMTS&Request=GetTile&Version=1.0.0&FORMAT=application%2Fvnd.mapbox-vector-tile&TileMatrix={z}&TileCol={x}&TileRow={y}',
         format: new MVT(),
         matrixSet: matrixSet.id,
         tileGrid: new OlTileGridWMTS({
