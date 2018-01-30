@@ -39,6 +39,7 @@ export function mapLayerBuilder(models, config, cache, Parent) {
    * @returns {object} OpenLayers layer
    */
   self.createLayer = function (def, options) {
+    console.log(config);
     var color, hexColor, date, key, proj, layer, layerNext, layerPrior, attributes;
 
     options = options || {};
