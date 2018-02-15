@@ -1,6 +1,7 @@
 # [Worldview](https://worldview.earthdata.nasa.gov)
 
 [![Worldview Screenshot](screenshot.png)](https://worldview.earthdata.nasa.gov)
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Flocaljo%2Fworldview.svg?type=shield)](https://app.fossa.io/projects/git%2Bgithub.com%2Flocaljo%2Fworldview?ref=badge_shield)
 
 [![Build Status](https://api.travis-ci.org/nasa-gibs/worldview.svg?branch=master)](https://travis-ci.org/nasa-gibs/worldview)
 
@@ -98,3 +99,6 @@ Worldview and NASA follow the [Contributor Covenant Code of Conduct](.github/COD
 ## License
 
 NASA-1.3 (See [LICENSE.md](LICENSE.md))
+
+
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Flocaljo%2Fworldview.svg?type=large)](https://app.fossa.io/projects/git%2Bgithub.com%2Flocaljo%2Fworldview?ref=badge_large)
